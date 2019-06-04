@@ -34,18 +34,15 @@ class AsyncStreamHandler(Handler):
         if filter:
             self.add_filter(filter)
         self.protocol_class = AiologgerProtocol
-        self._initialization_lock = asyncio.Lock()
+        self._initialization_lock = asyncio.Lock(loop=loop)
         self.writer: Optional[StreamWriter] = None
 
     @property
     def initialized(self):
         return self.writer is not None
 
-    async def _init_writer(self) -> StreamWriter:
+    async def _init_writer(self):
         async with self._initialization_lock:
-            if self.writer is not None:
-                return self.writer
-
             transport, protocol = await self.loop.connect_write_pipe(
                 self.protocol_class, self.stream
             )
@@ -56,17 +53,6 @@ class AsyncStreamHandler(Handler):
                 reader=None,
                 loop=self.loop,
             )
-            return self.writer
-
-    async def handle(self, record: LogRecord) -> bool:
-        """
-        Conditionally emit the specified logging record.
-        Emission depends on filters which may have been added to the handler.
-        """
-        rv = self.filter(record)
-        if rv:
-            await self.emit(record)
-        return rv
 
     async def flush(self):
         await self.writer.drain()
@@ -75,8 +61,8 @@ class AsyncStreamHandler(Handler):
         """
         Actually log the specified logging record to the stream.
         """
-        if self.writer is None:
-            self.writer = await self._init_writer()
+        if not self.initialized:
+            await self._init_writer()
 
         try:
             msg = self.formatter.format(record) + self.terminator
@@ -94,7 +80,9 @@ class AsyncStreamHandler(Handler):
         should ensure that this gets called from overridden close()
         methods.
         """
-        if self.writer is None:
+        if not self.initialized:
             return
+
         await self.flush()
         self.writer.close()
+        self.writer = None
