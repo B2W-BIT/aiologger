@@ -15,12 +15,14 @@ from typing import Callable, List, Optional
 import aiofiles
 from aiofiles.threadpool import AsyncTextIOWrapper
 
-from aiologger.handlers.streams import AsyncStreamHandler
+from aiologger.handlers.base import Handler
 from aiologger.records import LogRecord
 from aiologger.utils import classproperty
 
 
-class AsyncFileHandler(AsyncStreamHandler):
+class AsyncFileHandler(Handler):
+    terminator = "\n"
+
     def __init__(
         self,
         filename: str,
@@ -35,8 +37,7 @@ class AsyncFileHandler(AsyncStreamHandler):
         self.mode = mode
         self.encoding = encoding
         self.stream: AsyncTextIOWrapper = None
-        self._initialization_lock = asyncio.Lock()
-        self._initialization_lock = asyncio.Lock(loop=self.loop)
+        self._initialization_lock = asyncio.Lock(loop=loop)
 
     @property
     def initialized(self):
@@ -45,7 +46,6 @@ class AsyncFileHandler(AsyncStreamHandler):
     async def _init_writer(self):
         """
         Open the current base file with the (original) mode and encoding.
-        Return the resulting stream.
         """
         async with self._initialization_lock:
             if not self.initialized:
@@ -56,20 +56,25 @@ class AsyncFileHandler(AsyncStreamHandler):
                     loop=self.loop,
                 )
 
+    async def flush(self):
+        await self.stream.flush()
+
     async def close(self):
-        if not self.stream:
+        if not self.initialized:
             return
-        if hasattr(self.stream, "flush"):
-            await self.stream.flush()
+        await self.stream.flush()
         await self.stream.close()
+        self.stream = None
 
     async def emit(self, record: LogRecord):
         if not self.initialized:
             await self._init_writer()
 
         try:
-            msg = self.formatter.format(record) + self.terminator
+            msg = self.formatter.format(record)
             await self.stream.write(msg)
+            await self.stream.write(self.terminator)
+
             await self.stream.flush()
         except Exception as exc:
             await self.handle_error(record, exc)
