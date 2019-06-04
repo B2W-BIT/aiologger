@@ -53,7 +53,6 @@ class AsyncFileHandler(Handler):
                     file=self.absolute_file_path,
                     mode=self.mode,
                     encoding=self.encoding,
-                    loop=self.loop,
                 )
 
     async def flush(self):
