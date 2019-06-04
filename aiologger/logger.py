@@ -220,8 +220,11 @@ class Logger(Filterer):
             exc_info=exc_info,
             func=func,
             sinfo=sinfo,
-            extra=extra,
         )
+
+        if isinstance(extra, dict):
+            record.__dict__.update(extra)
+
         await self.handle(record)
 
     def __make_dummy_task(self) -> Task:
