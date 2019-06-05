@@ -327,7 +327,12 @@ class Logger(Filterer):
         if self._was_shutdown:
             return
         self._was_shutdown = True
+        await self._do_shutdown()
 
+    async def _do_shutdown(self):
+        """
+        Does actual shutdown
+        """
         for handler in reversed(self.handlers):
             if not handler:
                 continue
