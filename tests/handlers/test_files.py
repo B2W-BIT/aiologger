@@ -21,7 +21,6 @@ from aiologger.handlers.files import (
     ONE_MINUTE_IN_SECONDS,
     ONE_HOUR_IN_SECONDS,
 )
-from aiologger.handlers.files import AsyncFileHandler
 from aiologger.records import LogRecord
 from tests.utils import make_log_record
 
