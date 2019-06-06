@@ -13,6 +13,10 @@ from aiologger.levels import LogLevel, get_level_name, check_level
 from aiologger.records import LogRecord
 
 
+# Handler relies on any formatter
+_default_formatter = Formatter()
+
+
 class Handler(Filterer):
     """
     Handler instances dispatch logging events to specific destinations.
@@ -35,7 +39,7 @@ class Handler(Filterer):
         """
         Filterer.__init__(self)
         self._level = check_level(level)
-        self.formatter: Optional[Formatter] = None
+        self.formatter: Formatter = _default_formatter
         self._loop: Optional[asyncio.AbstractEventLoop] = loop
 
     @property

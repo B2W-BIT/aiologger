@@ -16,7 +16,6 @@ import aiofiles
 from aiofiles.threadpool import AsyncTextIOWrapper
 
 from aiologger.handlers.base import Handler
-from aiologger.formatters.base import Formatter
 from aiologger.records import LogRecord
 from aiologger.utils import classproperty
 
@@ -50,9 +49,6 @@ class AsyncFileHandler(Handler):
         """
         if not self._initialization_lock:
             self._initialization_lock = asyncio.Lock(loop=self.loop)
-
-        if not self.formatter:
-            self.formatter = Formatter()
 
         async with self._initialization_lock:
             if not self.initialized:
