@@ -37,7 +37,7 @@ class AsyncFileHandler(Handler):
         self.mode = mode
         self.encoding = encoding
         self.stream: AsyncTextIOWrapper = None
-        self._initialization_lock = asyncio.Lock(loop=loop)
+        self._initialization_lock = None
 
     @property
     def initialized(self):
@@ -47,6 +47,9 @@ class AsyncFileHandler(Handler):
         """
         Open the current base file with the (original) mode and encoding.
         """
+        if not self._initialization_lock:
+            self._initialization_lock = asyncio.Lock(loop=self.loop)
+
         async with self._initialization_lock:
             if not self.initialized:
                 self.stream = await aiofiles.open(
@@ -64,6 +67,7 @@ class AsyncFileHandler(Handler):
         await self.stream.flush()
         await self.stream.close()
         self.stream = None
+        self._initialization_lock = None
 
     async def emit(self, record: LogRecord):
         if not self.initialized:

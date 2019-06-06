@@ -21,7 +21,6 @@ from aiologger.handlers.files import (
     ONE_MINUTE_IN_SECONDS,
     ONE_HOUR_IN_SECONDS,
 )
-from aiologger.handlers.streams import AsyncStreamHandler
 from aiologger.records import LogRecord
 from tests.utils import make_log_record
 
@@ -54,7 +53,7 @@ class AsyncFileHandlerTests(asynctest.TestCase):
             loop=loop,
         )
 
-        self.assertIsInstance(handler, AsyncStreamHandler)
+        self.assertIsInstance(handler, AsyncFileHandler)
 
         self.assertEqual(handler.absolute_file_path, self.temp_file.name)
         self.assertEqual(handler.mode, mode)
@@ -72,10 +71,12 @@ class AsyncFileHandlerTests(asynctest.TestCase):
         handler = AsyncFileHandler(filename=self.temp_file.name)
 
         await handler._init_writer()
+        self.assertFalse(handler.stream is None)
+        self.assertIsInstance(handler.stream, AsyncTextIOWrapper)
         self.assertFalse(handler.stream.closed)
 
         await handler.close()
-        self.assertTrue(handler.stream.closed)
+        self.assertTrue(handler.stream is None)
 
     async def test_emit_writes_log_records_into_the_file(self):
         handler = AsyncFileHandler(filename=self.temp_file.name)
