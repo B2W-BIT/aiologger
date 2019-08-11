@@ -75,8 +75,9 @@ class AsyncFileHandler(Handler):
 
         try:
             msg = self.formatter.format(record)
-            await self.stream.write(msg)
-            await self.stream.write(self.terminator)
+            
+            # Write order is not guaranteed. String concatenation required
+            await self.stream.write(msg + self.terminator)
 
             await self.stream.flush()
         except Exception as exc:
