@@ -84,6 +84,8 @@ class AsyncFileHandlerTests(asynctest.TestCase):
         await handler.emit(self.record)
         await handler.emit(self.record)
 
+        await handler.flush()
+
         with open(self.temp_file.name) as fp:
             content = fp.read()
 

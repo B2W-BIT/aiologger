@@ -41,6 +41,20 @@ class FilterTests(unittest.TestCase):
         log_record = make_log_record(name="B.A")
         self.assertFalse(filter(log_record))
 
+    def test_filters_can_be_subclassed_properly(self):
+        """
+        Regression test https://github.com/B2W-BIT/aiologger/issues/76
+        """
+
+        class MyFilter(Filter):
+            filter = Mock(return_value=True)
+
+        filter = MyFilter()
+        log_record = make_log_record(name="A.B")
+
+        self.assertTrue(filter(log_record))
+        filter.filter.assert_called_once_with(log_record)
+
 
 class FiltererTests(unittest.TestCase):
     def test_add_filter_adds_filter_only_once(self):

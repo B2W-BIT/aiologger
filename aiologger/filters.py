@@ -43,7 +43,8 @@ class Filter:
             return False
         return record.name[self.name_length] == "."
 
-    __call__ = filter
+    def __call__(self, record: LogRecord) -> bool:
+        return self.filter(record)
 
 
 _FilterCallable = Callable[[LogRecord], bool]
