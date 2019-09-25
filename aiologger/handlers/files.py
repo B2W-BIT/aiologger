@@ -75,7 +75,7 @@ class AsyncFileHandler(Handler):
 
         try:
             msg = self.formatter.format(record)
-            
+
             # Write order is not guaranteed. String concatenation required
             await self.stream.write(msg + self.terminator)
 
@@ -104,7 +104,7 @@ class BaseAsyncRotatingFileHandler(AsyncFileHandler, metaclass=abc.ABCMeta):
         self.encoding = encoding
         self.namer = namer
         self.rotator = rotator
-        self._rollover_lock = asyncio.Lock(loop=self.loop)
+        self._rollover_lock = None
 
     def should_rollover(self, record: LogRecord) -> bool:
         raise NotImplementedError
@@ -120,6 +120,8 @@ class BaseAsyncRotatingFileHandler(AsyncFileHandler, metaclass=abc.ABCMeta):
         in `do_rollover`.
         """
         try:
+            if not self._rollover_lock:
+                self._rollover_lock = asyncio.Lock(loop=self.loop)
             if self.should_rollover(record):
                 async with self._rollover_lock:
                     if self.should_rollover(record):
