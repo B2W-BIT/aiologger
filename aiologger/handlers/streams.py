@@ -34,7 +34,7 @@ class AsyncStreamHandler(Handler):
         if filter:
             self.add_filter(filter)
         self.protocol_class = AiologgerProtocol
-        self._initialization_lock = asyncio.Lock(loop=self.loop)
+        self._initialization_lock = None
         self.writer: Optional[StreamWriter] = None
 
     @property
@@ -42,6 +42,12 @@ class AsyncStreamHandler(Handler):
         return self.writer is not None
 
     async def _init_writer(self) -> StreamWriter:
+        if self.initialized:
+            return self.writer
+
+        if not self._initialization_lock:
+            self._initialization_lock = asyncio.Lock(loop=self.loop)
+
         async with self._initialization_lock:
             if self.writer is not None:
                 return self.writer
