@@ -151,5 +151,5 @@ class ExtendedJsonFormatter(JsonFormatter):
             msg["exc_text"] = record.exc_text
 
         return self.serializer(
-            msg, default=self._default_handler, **record.serializer_kwargs
+            msg, **{'default': self._default_handler, **record.serializer_kwargs}
         )
