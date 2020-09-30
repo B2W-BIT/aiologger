@@ -404,7 +404,7 @@ class AsyncTimedRotatingFileHandler(BaseAsyncRotatingFileHandler):
         if len(result) < self.backup_count:
             return []
         else:
-            result.sort(reverse=True)  # os.listdir order is not defined
+            result.sort()  # os.listdir order is not defined
             return result[: len(result) - self.backup_count]
 
     async def _delete_files(self, file_paths: List[str]):
