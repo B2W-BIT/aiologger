@@ -16,6 +16,7 @@ black = "==18.9b0"
 ipdb = "==0.11"
 aiofiles = "==0.4.0"
 uvloop = "==0.11.3"
+orjson = "==3.4.0"
 
 [requires]
 python_version = "3.6"
