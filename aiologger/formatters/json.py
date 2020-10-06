@@ -59,7 +59,7 @@ class JsonFormatter(Formatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
         
-        result = self.serializer(msg, default=self._default_handler)
+        result: Union[str,bytes] = self.serializer(msg, default=self._default_handler)
         resType = type(result)
         if resType == "<class 'str'>":
             return result
