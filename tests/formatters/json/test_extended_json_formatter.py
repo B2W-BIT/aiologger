@@ -1,4 +1,5 @@
 import json
+import orjson
 import unittest
 from datetime import timezone, timedelta
 from unittest.mock import patch, ANY
@@ -212,3 +213,9 @@ class ExtendedJsonFormatterTests(unittest.TestCase):
                 "female_dog": "Xena",
             },
         )
+
+    def test_json_properly_serialized_when_bytes_object(self):
+        # orjson outputs a bytes string as mocked in the serializer
+        formatter = ExtendedJsonFormatter(serializer=orjson.dumps)
+        serialized_result = formatter.format(self.record) 
+        self.assertEqual(type(serialized_result),str)

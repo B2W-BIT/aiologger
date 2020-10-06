@@ -48,6 +48,7 @@ class JsonFormatter(Formatter):
         Formats a record and serializes it as a JSON str. If record message isnt
         already a dict, initializes a new dict and uses `default_msg_fieldname`
         as a key as the record msg as the value.
+        If the serialized result is of type bytes (if orjson is used), then it is converted to utf-8.
         """
         msg: Union[str, dict] = record.msg
         if not isinstance(msg, dict):
@@ -57,8 +58,15 @@ class JsonFormatter(Formatter):
             msg["exc_info"] = record.exc_info
         if record.exc_text:
             msg["exc_text"] = record.exc_text
-
-        return self.serializer(msg, default=self._default_handler)
+        
+        result = self.serializer(msg, default=self._default_handler)
+        resType = type(result)
+        if resType == "<class 'str'>":
+            return result
+        elif resType == "<class 'bytes'>":
+            return result.decode('utf-8')
+        else:
+            raise Exception(f'ERROR: serialized result must be of str or bytes, got {resType}')
 
     @classmethod
     def format_error_msg(cls, record: LogRecord, exception: Exception) -> Dict:
@@ -149,7 +157,14 @@ class ExtendedJsonFormatter(JsonFormatter):
             msg["exc_info"] = record.exc_info
         if record.exc_text:
             msg["exc_text"] = record.exc_text
-
-        return self.serializer(
+        
+        result = self.serializer(
             msg, default=self._default_handler, **record.serializer_kwargs
         )
+        if isinstance(result,str):
+            return result
+        elif isinstance(result,bytes):
+            return result.decode('utf-8')
+        else:
+            raise TypeError(f'ERROR: serialized result must be of str or bytes, got {type(result)}')
+
