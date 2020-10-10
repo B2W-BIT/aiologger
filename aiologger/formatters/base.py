@@ -3,7 +3,7 @@ import io
 import time
 import traceback
 from string import Template
-from typing import Union, List
+from typing import Union, List, Optional
 from types import TracebackType
 
 from aiologger.records import LogRecord, ExceptionInfo
@@ -236,3 +236,25 @@ class Formatter:
                 s = s + self.terminator
             s = s + self.format_stack(record.stack_info)
         return s
+    
+    def _serializer_ensure_str(self, msg: dict) -> str:
+        """
+        This ensures that the formatter will return a str object when the serializer
+        may return a bytes object.
+        """
+        if hasattr(msg,'serializer_kwargs'):
+            result: Union[str,bytes] = self.serializer(
+                msg, default=self._default_handler, **msg.serializer_kwargs
+            )
+        else:
+            result: Union[str,bytes] = self.serializer(
+                msg, default=self._default_handler
+            )
+        
+        if isinstance(result,str):
+            return result
+        elif isinstance(result,bytes):
+            return result.decode()
+        else:
+            resType = type(result)
+            raise Exception(f'ERROR: serialized object must be of str or bytes type, given {result} with type {resType}')

@@ -7,7 +7,7 @@ from datetime import timezone
 
 from aiologger.formatters.base import Formatter
 from aiologger.levels import LEVEL_TO_NAME
-from aiologger.records import LogRecord
+from aiologger.records import LogRecord, ExtendedLogRecord
 from aiologger.utils import CallableWrapper
 
 
@@ -59,14 +59,7 @@ class JsonFormatter(Formatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
         
-        result: Union[str,bytes] = self.serializer(msg, default=self._default_handler)
-        resType = type(result)
-        if resType == "<class 'str'>":
-            return result
-        elif resType == "<class 'bytes'>":
-            return result.decode('utf-8')
-        else:
-            raise Exception(f'ERROR: serialized result must be of str or bytes, got {resType}')
+        return self._serializer_ensure_str(msg=msg)
 
     @classmethod
     def format_error_msg(cls, record: LogRecord, exception: Exception) -> Dict:
@@ -141,7 +134,7 @@ class ExtendedJsonFormatter(JsonFormatter):
             if field in self.log_fields:
                 yield field, value
 
-    def format(self, record) -> str:
+    def format(self, record: ExtendedLogRecord) -> str:
         """
         :type record: aiologger.records.ExtendedLogRecord
         """
@@ -158,13 +151,5 @@ class ExtendedJsonFormatter(JsonFormatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
         
-        result = self.serializer(
-            msg, default=self._default_handler, **record.serializer_kwargs
-        )
-        if isinstance(result,str):
-            return result
-        elif isinstance(result,bytes):
-            return result.decode('utf-8')
-        else:
-            raise TypeError(f'ERROR: serialized result must be of str or bytes, got {type(result)}')
-
+        return self._serializer_ensure_str(msg=msg)
+        

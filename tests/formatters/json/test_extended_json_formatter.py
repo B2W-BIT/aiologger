@@ -13,7 +13,6 @@ from aiologger.formatters.json import (
 )
 from aiologger.records import ExtendedLogRecord
 
-
 class ExtendedJsonFormatterTests(unittest.TestCase):
     def setUp(self):
         self.formatter = ExtendedJsonFormatter()
@@ -214,8 +213,18 @@ class ExtendedJsonFormatterTests(unittest.TestCase):
             },
         )
 
+    @freeze_time("2018-06-16T10:16:00-03:00")
     def test_json_properly_serialized_when_bytes_object(self):
-        # orjson outputs a bytes string as mocked in the serializer
-        formatter = ExtendedJsonFormatter(serializer=orjson.dumps)
-        serialized_result = formatter.format(self.record) 
-        self.assertEqual(type(serialized_result),str)
+        custom_formatter             = ExtendedJsonFormatter(serializer=orjson.dumps)
+        custom_orjson_serializer_msg = custom_formatter.format(self.record)
+
+        # Note: json.dumps by default uses this separator (', ', ': ') 
+        # adding a whitespace whereas with orjson there is not
+        # so to get a perfect match is it necessary to specify it
+        self.record.serializer_kwargs = {"separators":(',', ':')}
+
+        serialized_result = self.formatter.format(self.record)
+        content = json.loads(serialized_result)
+        default_json_serializer_msg = self.formatter.serializer(content, separators=(',', ':'))
+
+        self.assertEqual(custom_orjson_serializer_msg, default_json_serializer_msg)
