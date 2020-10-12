@@ -14,6 +14,7 @@ from aiologger.formatters.json import (
 )
 from aiologger.records import ExtendedLogRecord
 
+
 class ExtendedJsonFormatterTests(unittest.TestCase):
     def setUp(self):
         self.formatter = ExtendedJsonFormatter()
@@ -183,13 +184,13 @@ class ExtendedJsonFormatterTests(unittest.TestCase):
 
         self.record.serializer_kwargs = {"indent": 2, "sort_keys": True}
         expected_msg = {
-                "logged_at": ANY,
-                "line_number": 42,
-                "function": "xablaufunc",
-                "level": "WARNING",
-                "file_path": "/aiologger/tests/formatters/test_json_formatter.py",
-                "msg": {"dog": "Xablau", "action": "bark"}
-            }
+            "logged_at": ANY,
+            "line_number": 42,
+            "function": "xablaufunc",
+            "level": "WARNING",
+            "file_path": "/aiologger/tests/formatters/test_json_formatter.py",
+            "msg": {"dog": "Xablau", "action": "bark"},
+        }
         self.formatter.serializer = _serializer
         returned_msg = self.formatter.format(self.record)
 
@@ -219,15 +220,19 @@ class ExtendedJsonFormatterTests(unittest.TestCase):
     @freeze_time("2018-06-16T10:16:00-03:00")
     def test_json_properly_serialized_when_bytes_object(self):
         # orjson
-        custom_formatter   = ExtendedJsonFormatter(serializer=orjson.dumps)
-        # Note: json.dumps by default uses this separator (', ', ': ') 
+        custom_formatter = ExtendedJsonFormatter(serializer=orjson.dumps)
+        # Note: json.dumps by default uses this separator (', ', ': ')
         # adding a whitespace whereas with orjson it is not
         # so to have a perfect match is it necessary to specify it
-        custom_orjson_serializer_msg    = custom_formatter.format(self.record)
+        custom_orjson_serializer_msg = custom_formatter.format(self.record)
 
         # json
         serialized_result = self.formatter.format(self.record)
         content = json.loads(serialized_result)
-        default_json_serializer_msg     = self.formatter.serializer(content, separators=(',', ':'))
-        
-        self.assertEqual(custom_orjson_serializer_msg, default_json_serializer_msg)
+        default_json_serializer_msg = self.formatter.serializer(
+            content, separators=(",", ":")
+        )
+
+        self.assertEqual(
+            custom_orjson_serializer_msg, default_json_serializer_msg
+        )

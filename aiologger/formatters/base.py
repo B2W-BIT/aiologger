@@ -236,4 +236,3 @@ class Formatter:
                 s = s + self.terminator
             s = s + self.format_stack(record.stack_info)
         return s
-    

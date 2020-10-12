@@ -98,16 +98,20 @@ class JsonFormatterTests(unittest.TestCase):
                 },
             },
         )
-    
+
     def test_json_properly_serialized_when_bytes_object(self):
         self.record.msg = {"dog": "Xablau"}
-        custom_formatter   = JsonFormatter(serializer=orjson.dumps)
-        # Note: json.dumps by default uses this separator (', ', ': ') 
+        custom_formatter = JsonFormatter(serializer=orjson.dumps)
+        # Note: json.dumps by default uses this separator (', ', ': ')
         # adding a whitespace whereas with orjson it is not
         # so to have a perfect match is it necessary to specify it
-        custom_orjson_serializer_msg    = custom_formatter.format(self.record)
-        default_json_serializer_msg     = self.formatter.serializer({"dog": "Xablau"}, separators=(',', ':'))
-        self.assertEqual(custom_orjson_serializer_msg, default_json_serializer_msg)
+        custom_orjson_serializer_msg = custom_formatter.format(self.record)
+        default_json_serializer_msg = self.formatter.serializer(
+            {"dog": "Xablau"}, separators=(",", ":")
+        )
+        self.assertEqual(
+            custom_orjson_serializer_msg, default_json_serializer_msg
+        )
 
 
 class DefaultHandlerTests(unittest.TestCase):
@@ -163,4 +167,3 @@ class DefaultHandlerTests(unittest.TestCase):
             result = self.formatter._default_handler(e.__traceback__)
             self.assertEqual(len(result), 2)
             self.assertIn('raise ValueError("Xablau")', result[1])
-
