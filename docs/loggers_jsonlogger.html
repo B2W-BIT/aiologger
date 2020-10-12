@@ -1,0 +1,438 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>JsonLogger &#8212; aiologger 0.3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Handlers" href="handlers.html" />
+    <link rel="prev" title="Logger" href="loggers_logger.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-aiologger.loggers.json">
+<span id="jsonlogger"></span><h1>JsonLogger<a class="headerlink" href="#module-aiologger.loggers.json" title="Permalink to this headline">¶</a></h1>
+<p>A simple, featureful, drop-in replacement to the default
+<code class="docutils literal notranslate"><span class="pre">aiologger.Logger</span></code> that grants to always log valid, single line, JSON
+output.</p>
+<div class="section" id="it-logs-everything">
+<h2>It logs everything<a class="headerlink" href="#it-logs-everything" title="Permalink to this headline">¶</a></h2>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Im a string&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2018-06-14T09:34:56.482817&quot;, &quot;line_number&quot;: 9, &quot;function&quot;: &quot;main&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;file_path&quot;: &quot;/Users/diogo.mmartins/Library/Preferences/PyCharm2018.1/scratches/scratch_47.py&quot;, &quot;msg&quot;: &quot;Im a string&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+        <span class="s1">&#39;date_objects&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
+        <span class="s1">&#39;exceptions&#39;</span><span class="p">:</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Boooom&quot;</span><span class="p">),</span>
+        <span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="n">JsonLogger</span>
+    <span class="p">})</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2018-06-14T09:34:56.483000&quot;, &quot;line_number&quot;: 13, &quot;function&quot;: &quot;main&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;file_path&quot;: &quot;/Users/diogo.mmartins/Library/Preferences/PyCharm2018.1/scratches/scratch_47.py&quot;, &quot;msg&quot;: {&quot;date_objects&quot;: &quot;2018-06-14T09:34:56.482953&quot;, &quot;exceptions&quot;: &quot;Exception: KeyError(&#39;Boooom&#39;,)&quot;, &quot;types&quot;: &quot;&lt;JsonLogger aiologger-json (DEBUG)&gt;&quot;}}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="logging-callables-with-callablewrapper">
+<h2>Logging callables with CallableWrapper<a class="headerlink" href="#logging-callables-with-callablewrapper" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Callable[[],</span> <span class="pre">str]</span></code> log values may also be used to generate dynamic
+content that are evaluated at serialization time. All you need to do is
+wrap the callable using <code class="docutils literal notranslate"><span class="pre">CallableWrapper</span></code>:</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+<span class="kn">from</span> <span class="nn">aiologger.utils</span> <span class="kn">import</span> <span class="n">CallableWrapper</span>
+
+
+<span class="k">def</span> <span class="nf">rand</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">CallableWrapper</span><span class="p">(</span><span class="n">rand</span><span class="p">))</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2018-06-14T09:37:52.624123&quot;, &quot;line_number&quot;: 15, &quot;function&quot;: &quot;main&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;file_path&quot;: &quot;/Users/diogo.mmartins/Library/Preferences/PyCharm2018.1/scratches/scratch_47.py&quot;, &quot;msg&quot;: 70}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span><span class="s2">&quot;Xablau&quot;</span><span class="p">:</span> <span class="n">CallableWrapper</span><span class="p">(</span><span class="n">rand</span><span class="p">)})</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2018-06-14T09:37:52.624305&quot;, &quot;line_number&quot;: 18, &quot;function&quot;: &quot;main&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;file_path&quot;: &quot;/Users/diogo.mmartins/Library/Preferences/PyCharm2018.1/scratches/scratch_47.py&quot;, &quot;msg&quot;: {&quot;Xablau&quot;: 29}}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-content-to-root">
+<h2>Adding content to root<a class="headerlink" href="#adding-content-to-root" title="Permalink to this headline">¶</a></h2>
+<p>By default, everything passed to the log methods is inserted inside the
+<code class="docutils literal notranslate"><span class="pre">msg</span></code> root attribute, but sometimes we want to add content to the root
+level.</p>
+<div class="section" id="flatten">
+<h3>Flatten<a class="headerlink" href="#flatten" title="Permalink to this headline">¶</a></h3>
+<p>This behavior may be achieved using <code class="docutils literal notranslate"><span class="pre">flatten</span></code>. Which is available both
+as a method parameter and instance attribute.</p>
+<p>As an instance attribute, every call to a log method would “flat” the
+dict attributes.</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span><span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;response_time&quot;</span><span class="p">:</span> <span class="mf">0.00534534</span><span class="p">})</span>
+    <span class="c1"># {&quot;status_code&quot;: 200, &quot;response_time&quot;: 0.534534, &quot;logged_at&quot;: &quot;2017-08-11T16:18:58.446985&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">({</span><span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;response_time&quot;</span><span class="p">:</span> <span class="mf">0.00134534</span><span class="p">})</span>
+    <span class="c1"># {&quot;status_code&quot;: 200, &quot;response_time&quot;: 0.534534, &quot;logged_at&quot;: &quot;2017-08-11T16:18:58.446986&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>As a method parameter, only the specific call would add the content to
+the root.</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="k">await</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span><span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;response_time&quot;</span><span class="p">:</span> <span class="mf">0.00534534</span><span class="p">},</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2017-08-11T16:23:16.312441&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;, &quot;status_code&quot;: 200, &quot;response_time&quot;: 0.00534534}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">({</span><span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span> <span class="s2">&quot;response_time&quot;</span><span class="p">:</span> <span class="mf">0.00134534</span><span class="p">})</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2017-08-11T16:23:16.312618&quot;, &quot;line_number&quot;: 8, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;ERROR&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;, &quot;msg&quot;: {&quot;status_code&quot;: 404, &quot;response_time&quot;: 0.00134534}}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Warning</strong>: It is possible to overwrite keys that are already present
+at root level.</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span><span class="s1">&#39;logged_at&#39;</span><span class="p">:</span> <span class="s1">&#39;Yesterday&#39;</span><span class="p">},</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;Yesterday&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="extra">
+<h3>Extra<a class="headerlink" href="#extra" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">extra</span></code> parameter allow you to add specific content to root:</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">69</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="mi">666</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;I&#39;m a simple log&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;msg&quot;: &quot;I&#39;m a simple log&quot;, &quot;logged_at&quot;: &quot;2017-08-11T12:21:05.722216&quot;, &quot;line_number&quot;: 5, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span><span class="s2">&quot;dog&quot;</span><span class="p">:</span> <span class="s2">&quot;Xablau&quot;</span><span class="p">},</span> <span class="n">extra</span><span class="o">=</span><span class="nb">locals</span><span class="p">())</span>
+    <span class="c1"># {&quot;logged_at&quot;: &quot;2018-06-14T09:47:29.477705&quot;, &quot;line_number&quot;: 14, &quot;function&quot;: &quot;main&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;file_path&quot;: &quot;/Users/diogo.mmartins/Library/Preferences/PyCharm2018.1/scratches/scratch_47.py&quot;, &quot;msg&quot;: {&quot;dog&quot;: &quot;Xablau&quot;}, &quot;logger&quot;: &quot;&lt;JsonLogger aiologger-json (DEBUG)&gt;&quot;, &quot;c&quot;: [69, 666], &quot;b&quot;: 666, &quot;a&quot;: 69}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>It also allows you to override the default root content:</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;I&#39;m a simple log&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;msg&quot;: &quot;I&#39;m a simple log&quot;, &quot;logged_at&quot;: &quot;2017-08-11T12:21:05.722216&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;I&#39;m a simple log&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;logged_at&#39;</span><span class="p">:</span> <span class="s1">&#39;Yesterday&#39;</span><span class="p">})</span>
+    <span class="c1"># {&quot;msg&quot;: &quot;I&#39;m a simple log&quot;, &quot;logged_at&quot;: &quot;Yesterday&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and it may also be used as an instance attribute:</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;logged_at&#39;</span><span class="p">:</span> <span class="s1">&#39;Yesterday&#39;</span><span class="p">})</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;I&#39;m a simple log&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;msg&quot;: &quot;I&#39;m a simple log&quot;, &quot;logged_at&quot;: &quot;Yesterday&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;I&#39;m a simple log&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;msg&quot;: &quot;I&#39;m a simple log&quot;, &quot;logged_at&quot;: &quot;Yesterday&quot;, &quot;line_number&quot;: 6, &quot;function&quot;: &quot;&lt;module&gt;&quot;, &quot;level&quot;: &quot;INFO&quot;, &quot;path&quot;: &quot;/Users/diogo/PycharmProjects/aiologger/bla.py&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="exclude-default-logger-fields">
+<h3>Exclude default logger fields<a class="headerlink" href="#exclude-default-logger-fields" title="Permalink to this headline">¶</a></h3>
+<p>If you think that the default fields are too much, it’s also possible to
+exclude fields from the output message.</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+<span class="kn">from</span> <span class="nn">aiologger.formatters.json</span> <span class="kn">import</span> <span class="n">FUNCTION_NAME_FIELDNAME</span><span class="p">,</span> <span class="n">LOGGED_AT_FIELDNAME</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span>
+        <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+        <span class="n">exclude_fields</span><span class="o">=</span><span class="p">[</span><span class="n">FUNCTION_NAME_FIELDNAME</span><span class="p">,</span>
+                        <span class="n">LOGGED_AT_FIELDNAME</span><span class="p">,</span>
+                        <span class="s1">&#39;file_path&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;line_number&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Function, file path and line number wont be printed&quot;</span><span class="p">)</span>
+    <span class="c1"># {&quot;level&quot;: &quot;INFO&quot;, &quot;msg&quot;: &quot;Function, file path and line number wont be printed&quot;}</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="serializer-options">
+<h2>Serializer options<a class="headerlink" href="#serializer-options" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">serializer_kwargs</span></code> is available both as instance attribute and as a
+log method parameter and may be used to pass keyword arguments to the
+<code class="docutils literal notranslate"><span class="pre">serializer</span></code> function. (See more:
+<a class="reference external" href="https://docs.python.org/3/library/json.html">https://docs.python.org/3/library/json.html</a>)</p>
+<p>For pretty printing the output, you may use the <code class="docutils literal notranslate"><span class="pre">indent</span></code> kwarg. Ex.:</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">aiologger.loggers.json</span> <span class="kn">import</span> <span class="n">JsonLogger</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">JsonLogger</span><span class="o">.</span><span class="n">with_default_handlers</span><span class="p">(</span>
+        <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+        <span class="n">serializer_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;indent&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+        <span class="s2">&quot;artist&quot;</span><span class="p">:</span> <span class="s2">&quot;Black Country Communion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;song&quot;</span><span class="p">:</span> <span class="s2">&quot;Cold&quot;</span>
+    <span class="p">})</span>
+
+    <span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Would result in a pretty indented output:</p>
+<div class="code javascript highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;logged_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2017-08-11T21:04:21.559070&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;line_number&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;module&gt;&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;file_path&quot;</span><span class="p">:</span> <span class="s2">&quot;/Users/diogo/Library/Preferences/PyCharm2017.1/scratches/scratch_32.py&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;artist&quot;</span><span class="p">:</span> <span class="s2">&quot;Black Country Communion&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;song&quot;</span><span class="p">:</span> <span class="s2">&quot;Cold&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The same result can be achieved making a log call with
+<code class="docutils literal notranslate"><span class="pre">serializer_kwargs</span></code> as a parameter.</p>
+<div class="code python highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">await</span> <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">({</span><span class="s1">&#39;artist&#39;</span><span class="p">:</span> <span class="s1">&#39;Black Country Communion&#39;</span><span class="p">,</span> <span class="s1">&#39;song&#39;</span><span class="p">:</span> <span class="s1">&#39;Cold&#39;</span><span class="p">},</span> <span class="n">serializer_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;indent&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">aiologger</a></h1>
+
+
+
+<p class="blurb">Asynchronous non blocking logging for python and asyncio</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=B2W-BIT&repo=aiologger&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="loggers.html">Loggers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="loggers_logger.html">Logger</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">JsonLogger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#it-logs-everything">It logs everything</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging-callables-with-callablewrapper">Logging callables with CallableWrapper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-content-to-root">Adding content to root</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#serializer-options">Serializer options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="handlers.html">Handlers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="loggers.html">Loggers</a><ul>
+      <li>Previous: <a href="loggers_logger.html" title="previous chapter">Logger</a></li>
+      <li>Next: <a href="handlers.html" title="next chapter">Handlers</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, aiologger contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/loggers_jsonlogger.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/B2W-BIT/aiologger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

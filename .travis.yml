@@ -10,6 +10,7 @@ script:
   - pipenv run lint
   - pipenv run fmt-check
   - pipenv run test
+  - pipenv run make-docs
 after_success:
   - codecov
 deploy:
