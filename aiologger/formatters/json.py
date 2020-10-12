@@ -151,5 +151,5 @@ class ExtendedJsonFormatter(JsonFormatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
         
-        return self._serializer_ensure_str(msg=msg)
+        return self._serializer_ensure_str(msg=msg,record=record)
         

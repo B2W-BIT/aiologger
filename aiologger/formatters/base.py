@@ -6,7 +6,7 @@ from string import Template
 from typing import Union, List, Optional
 from types import TracebackType
 
-from aiologger.records import LogRecord, ExceptionInfo
+from aiologger.records import LogRecord, ExtendedLogRecord, ExceptionInfo
 
 
 class FormatStyles(str, enum.Enum):
@@ -237,20 +237,20 @@ class Formatter:
             s = s + self.format_stack(record.stack_info)
         return s
     
-    def _serializer_ensure_str(self, msg: dict) -> str:
+    def _serializer_ensure_str(self, msg: dict, record: Optional[ExtendedLogRecord] = None) -> str:
         """
         This ensures that the formatter will return a str object when the serializer
         may return a bytes object.
         """
-        if hasattr(msg,'serializer_kwargs'):
+        if hasattr(record, "serializer_kwargs"):
             result: Union[str,bytes] = self.serializer(
-                msg, default=self._default_handler, **msg.serializer_kwargs
+                msg, default=self._default_handler, **record.serializer_kwargs
             )
         else:
             result: Union[str,bytes] = self.serializer(
                 msg, default=self._default_handler
             )
-        
+
         if isinstance(result,str):
             return result
         elif isinstance(result,bytes):
