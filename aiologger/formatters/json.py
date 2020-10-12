@@ -93,7 +93,6 @@ class JsonFormatter(Formatter):
             result: Union[str,bytes] = self.serializer(
                 msg, default=self._default_handler, **record.serializer_kwargs
             )
-            
         else:
             result: Union[str,bytes] = self.serializer(
                 msg, default=self._default_handler
