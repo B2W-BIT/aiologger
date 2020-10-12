@@ -83,6 +83,29 @@ class JsonFormatter(Formatter):
                 "traceback": traceback_info,
             },
         }
+    
+    def _serializer_ensure_str(self, msg: dict, record: Optional[ExtendedLogRecord] = None) -> str:
+        """
+        This ensures that the formatter will return a str object when the serializer
+        may return a bytes object.
+        """
+        if hasattr(record, "serializer_kwargs"):
+            result: Union[str,bytes] = self.serializer(
+                msg, default=self._default_handler, **record.serializer_kwargs
+            )
+            
+        else:
+            result: Union[str,bytes] = self.serializer(
+                msg, default=self._default_handler
+            )
+
+        if isinstance(result,str):
+            return result
+        elif isinstance(result,bytes):
+            return result.decode()
+        else:
+            resType = type(result)
+            raise Exception(f'ERROR: serialized object must be of str or bytes type, given {result} with type {resType}')
 
 
 class ExtendedJsonFormatter(JsonFormatter):
