@@ -112,16 +112,16 @@ class JsonFormatterTests(unittest.TestCase):
         self.assertEqual(
             custom_orjson_serializer_msg, default_json_serializer_msg
         )
-    
+
     def test_raise_exception_when_serialiazed_result_type_not_valid(self):
         with self.assertRaises(TypeError):
+
             def _serializer(msg, default, **kwargs):
                 data = int(5)
                 return data
 
             self.formatter.serializer = _serializer
             returned_msg = self.formatter.format(self.record)
-
 
 
 class DefaultHandlerTests(unittest.TestCase):
