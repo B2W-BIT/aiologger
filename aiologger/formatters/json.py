@@ -7,7 +7,7 @@ from datetime import timezone
 
 from aiologger.formatters.base import Formatter
 from aiologger.levels import LEVEL_TO_NAME
-from aiologger.records import LogRecord
+from aiologger.records import LogRecord, ExtendedLogRecord
 from aiologger.utils import CallableWrapper
 
 
@@ -48,6 +48,7 @@ class JsonFormatter(Formatter):
         Formats a record and serializes it as a JSON str. If record message isnt
         already a dict, initializes a new dict and uses `default_msg_fieldname`
         as a key as the record msg as the value.
+        If the serialized result is of type bytes (if orjson is used), then it is converted to utf-8.
         """
         msg: Union[str, dict] = record.msg
         if not isinstance(msg, dict):
@@ -58,7 +59,7 @@ class JsonFormatter(Formatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
 
-        return self.serializer(msg, default=self._default_handler)
+        return self._serializer_ensure_str(msg=msg)
 
     @classmethod
     def format_error_msg(cls, record: LogRecord, exception: Exception) -> Dict:
@@ -82,6 +83,36 @@ class JsonFormatter(Formatter):
                 "traceback": traceback_info,
             },
         }
+
+    def _serializer_ensure_str(
+        self,
+        msg: dict,
+        record: Optional[Union[LogRecord, ExtendedLogRecord]] = None,
+    ) -> str:
+        """
+        This ensures that the formatter will return a str object when the serializer
+        may return a bytes object.
+        """
+        if hasattr(record, "serializer_kwargs"):
+            result: Union[str, bytes] = self.serializer(
+                msg,
+                default=self._default_handler,
+                **record.serializer_kwargs,  # type: ignore
+            )
+        else:
+            result: Union[str, bytes] = self.serializer(  # type: ignore
+                msg, default=self._default_handler
+            )
+
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, bytes):
+            return result.decode()
+        else:
+            resType = type(result)
+            raise TypeError(
+                f"ERROR: serialized object must be of str or bytes type, given {result} with type {resType}"
+            )
 
 
 class ExtendedJsonFormatter(JsonFormatter):
@@ -133,7 +164,7 @@ class ExtendedJsonFormatter(JsonFormatter):
             if field in self.log_fields:
                 yield field, value
 
-    def format(self, record) -> str:
+    def format(self, record: ExtendedLogRecord) -> str:  # type: ignore
         """
         :type record: aiologger.records.ExtendedLogRecord
         """
@@ -150,6 +181,4 @@ class ExtendedJsonFormatter(JsonFormatter):
         if record.exc_text:
             msg["exc_text"] = record.exc_text
 
-        return self.serializer(
-            msg, default=self._default_handler, **record.serializer_kwargs
-        )
+        return self._serializer_ensure_str(msg=msg, record=record)

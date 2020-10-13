@@ -11,7 +11,12 @@ from aiologger.handlers.base import Handler
 from aiologger.handlers.streams import AsyncStreamHandler
 from aiologger.levels import LogLevel, check_level
 from aiologger.records import LogRecord
-from aiologger.utils import get_current_frame
+from aiologger.utils import (
+    get_current_frame,
+    create_task,
+    loop_compat,
+    bind_loop,
+)
 
 _HandlerFactory = Callable[[], Awaitable[Iterable[Handler]]]
 
@@ -43,10 +48,9 @@ def o_o():
 _srcfile = o_o.__code__.co_filename
 
 
+@loop_compat
 class Logger(Filterer):
-    def __init__(
-        self, *, name="aiologger", level=LogLevel.NOTSET, loop=None
-    ) -> None:
+    def __init__(self, *, name="aiologger", level=LogLevel.NOTSET) -> None:
         super(Logger, self).__init__()
         self.name = name
         self.level = check_level(level)
@@ -54,17 +58,9 @@ class Logger(Filterer):
         self.propagate = True
         self.handlers: List[Handler] = []
         self.disabled = False
-        self._loop: Optional[AbstractEventLoop] = loop
         self._was_shutdown = False
 
         self._dummy_task: Optional[Task] = None
-
-    @property
-    def loop(self) -> AbstractEventLoop:
-        if self._loop is not None and self._loop.is_running():
-            return self._loop
-        self._loop = asyncio.get_event_loop()
-        return self._loop
 
     @classmethod
     def with_default_handlers(
@@ -73,25 +69,22 @@ class Logger(Filterer):
         name="aiologger",
         level=LogLevel.NOTSET,
         formatter: Optional[Formatter] = None,
-        loop: Optional[AbstractEventLoop] = None,
         **kwargs,
     ):
-        self = cls(name=name, level=level, loop=loop, **kwargs)  # type: ignore
+        self = cls(name=name, level=level, **kwargs)  # type: ignore
+
+        _AsyncStreamHandler = bind_loop(AsyncStreamHandler, kwargs)
         self.add_handler(
-            AsyncStreamHandler(
+            _AsyncStreamHandler(
                 stream=sys.stdout,
                 level=LogLevel.DEBUG,
                 formatter=formatter,
                 filter=StdoutFilter(),
-                loop=loop,
             )
         )
         self.add_handler(
-            AsyncStreamHandler(
-                stream=sys.stderr,
-                level=LogLevel.WARNING,
-                formatter=formatter,
-                loop=loop,
+            _AsyncStreamHandler(
+                stream=sys.stderr, level=LogLevel.WARNING, formatter=formatter
             )
         )
 
@@ -222,13 +215,13 @@ class Logger(Filterer):
             sinfo=sinfo,
             extra=extra,
         )
-        return self.loop.create_task(self.handle(record))
+        return create_task(self.handle(record))
 
     def __make_dummy_task(self) -> Task:
         async def _dummy(*args, **kwargs):
             return
 
-        return self.loop.create_task(_dummy())
+        return create_task(_dummy())
 
     def is_enabled_for(self, level) -> bool:
         return level >= self.level
@@ -345,7 +338,7 @@ class Logger(Filterer):
                 Ignore errors which might be caused
                 because handlers have been closed but
                 references to them are still around at
-                application exit. Basically ignore everything, 
+                application exit. Basically ignore everything,
                 as we're shutting down
                 """
                 pass

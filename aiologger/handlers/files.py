@@ -17,21 +17,17 @@ from aiofiles.threadpool import AsyncTextIOWrapper
 
 from aiologger.handlers.base import Handler
 from aiologger.records import LogRecord
-from aiologger.utils import classproperty
+from aiologger.utils import classproperty, get_running_loop, loop_compat
 
 
+@loop_compat
 class AsyncFileHandler(Handler):
     terminator = "\n"
 
     def __init__(
-        self,
-        filename: str,
-        mode: str = "a",
-        encoding: str = None,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
+        self, filename: str, mode: str = "a", encoding: str = None
     ) -> None:
-        super().__init__(loop=loop)
+        super().__init__()
         filename = os.fspath(filename)
         self.absolute_file_path = os.path.abspath(filename)
         self.mode = mode
@@ -48,7 +44,7 @@ class AsyncFileHandler(Handler):
         Open the current base file with the (original) mode and encoding.
         """
         if not self._initialization_lock:
-            self._initialization_lock = asyncio.Lock(loop=self.loop)
+            self._initialization_lock = asyncio.Lock()
 
         async with self._initialization_lock:
             if not self.initialized:
@@ -96,10 +92,8 @@ class BaseAsyncRotatingFileHandler(AsyncFileHandler, metaclass=abc.ABCMeta):
         encoding: str = None,
         namer: Namer = None,
         rotator: Rotator = None,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
     ) -> None:
-        super().__init__(filename, mode, encoding, loop=loop)
+        super().__init__(filename, mode, encoding)
         self.mode = mode
         self.encoding = encoding
         self.namer = namer
@@ -122,7 +116,7 @@ class BaseAsyncRotatingFileHandler(AsyncFileHandler, metaclass=abc.ABCMeta):
         try:
             if self.should_rollover(record):
                 if not self._rollover_lock:
-                    self._rollover_lock = asyncio.Lock(loop=self.loop)
+                    self._rollover_lock = asyncio.Lock()
 
                 async with self._rollover_lock:
                     if self.should_rollover(record):
@@ -160,10 +154,9 @@ class BaseAsyncRotatingFileHandler(AsyncFileHandler, metaclass=abc.ABCMeta):
         """
         if self.rotator is None:
             # logging issue 18940: A file may not have been created if delay is True.
-            if await self.loop.run_in_executor(
-                None, lambda: os.path.exists(source)
-            ):
-                await self.loop.run_in_executor(  # type: ignore
+            loop = get_running_loop()
+            if await loop.run_in_executor(None, lambda: os.path.exists(source)):
+                await loop.run_in_executor(  # type: ignore
                     None, lambda: os.rename(source, dest)
                 )
         else:
@@ -236,12 +229,8 @@ class AsyncTimedRotatingFileHandler(BaseAsyncRotatingFileHandler):
         encoding: str = None,
         utc: bool = False,
         at_time: datetime.time = None,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
     ) -> None:
-        super().__init__(
-            filename=filename, mode="a", encoding=encoding, loop=loop
-        )
+        super().__init__(filename=filename, mode="a", encoding=encoding)
         self.when = when.upper()
         self.backup_count = backup_count
         self.utc = utc
@@ -400,7 +389,8 @@ class AsyncTimedRotatingFileHandler(BaseAsyncRotatingFileHandler):
         Determine the files to delete when rolling over.
         """
         dir_name, base_name = os.path.split(self.absolute_file_path)
-        file_names = await self.loop.run_in_executor(
+        loop = get_running_loop()
+        file_names = await loop.run_in_executor(
             None, lambda: os.listdir(dir_name)
         )
         result = []
@@ -418,11 +408,12 @@ class AsyncTimedRotatingFileHandler(BaseAsyncRotatingFileHandler):
             return result[: len(result) - self.backup_count]
 
     async def _delete_files(self, file_paths: List[str]):
+        loop = get_running_loop()
         delete_tasks = (
-            self.loop.run_in_executor(None, lambda: os.unlink(file_path))
+            loop.run_in_executor(None, lambda: os.unlink(file_path))
             for file_path in file_paths
         )
-        await asyncio.gather(*delete_tasks, loop=self.loop)
+        await asyncio.gather(*delete_tasks)
 
     async def do_rollover(self):
         """
@@ -455,10 +446,11 @@ class AsyncTimedRotatingFileHandler(BaseAsyncRotatingFileHandler):
             + "."
             + time.strftime(self.suffix, time_tuple)
         )
-        if await self.loop.run_in_executor(
+        loop = get_running_loop()
+        if await loop.run_in_executor(
             None, lambda: os.path.exists(destination_file_path)
         ):
-            await self.loop.run_in_executor(
+            await loop.run_in_executor(
                 None, lambda: os.unlink(destination_file_path)
             )
         await self.rotate(self.absolute_file_path, destination_file_path)

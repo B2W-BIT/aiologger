@@ -4,12 +4,13 @@ python:
   - "3.6"
   - "3.7.1"
 install:
-  - pip install -U pip==18.0 pipenv==2018.7.1
+  - pip install -U pip==20.2.3 pipenv==2020.8.13
   - pipenv install --system --deploy --ignore-pipfile --dev
 script:
   - pipenv run lint
   - pipenv run fmt-check
   - pipenv run test
+  - pipenv run make-docs
 after_success:
   - codecov
 deploy:

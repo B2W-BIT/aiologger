@@ -3,6 +3,7 @@ import sys
 from asyncio import AbstractEventLoop, StreamWriter
 from typing import Union, Optional
 
+from aiologger.utils import get_running_loop, loop_compat
 from aiologger.filters import Filter
 from aiologger.formatters.base import Formatter
 from aiologger.handlers.base import Handler
@@ -11,6 +12,7 @@ from aiologger.protocols import AiologgerProtocol
 from aiologger.records import LogRecord
 
 
+@loop_compat
 class AsyncStreamHandler(Handler):
     terminator = "\n"
 
@@ -20,10 +22,8 @@ class AsyncStreamHandler(Handler):
         level: Union[str, int, LogLevel] = LogLevel.NOTSET,
         formatter: Formatter = None,
         filter: Filter = None,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
     ) -> None:
-        super().__init__(loop=loop)
+        super().__init__()
         if stream is None:
             stream = sys.stderr
         self.stream = stream
@@ -34,7 +34,7 @@ class AsyncStreamHandler(Handler):
         if filter:
             self.add_filter(filter)
         self.protocol_class = AiologgerProtocol
-        self._initialization_lock = asyncio.Lock(loop=self.loop)
+        self._initialization_lock = asyncio.Lock()
         self.writer: Optional[StreamWriter] = None
 
     @property
@@ -46,15 +46,13 @@ class AsyncStreamHandler(Handler):
             if self.writer is not None:
                 return self.writer
 
-            transport, protocol = await self.loop.connect_write_pipe(
+            loop = get_running_loop()
+            transport, protocol = await loop.connect_write_pipe(
                 self.protocol_class, self.stream
             )
 
             self.writer = StreamWriter(  # type: ignore # https://github.com/python/typeshed/pull/2719
-                transport=transport,
-                protocol=protocol,
-                reader=None,
-                loop=self.loop,
+                transport=transport, protocol=protocol, reader=None, loop=loop
             )
             return self.writer
 

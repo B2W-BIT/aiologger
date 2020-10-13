@@ -6,6 +6,7 @@ from asyncio import AbstractEventLoop
 from typing import Optional, Union
 
 from aiologger import settings
+from aiologger.utils import loop_compat
 from aiologger.filters import Filterer
 from aiologger.formatters.base import Formatter
 from aiologger.formatters.json import JsonFormatter
@@ -17,6 +18,7 @@ from aiologger.records import LogRecord
 _default_formatter = Formatter()
 
 
+@loop_compat
 class Handler(Filterer):
     """
     Handler instances dispatch logging events to specific destinations.
@@ -27,12 +29,7 @@ class Handler(Filterer):
     the 'raw' message as determined by record.message is logged.
     """
 
-    def __init__(
-        self,
-        level: LogLevel = LogLevel.NOTSET,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
-    ) -> None:
+    def __init__(self, level: LogLevel = LogLevel.NOTSET) -> None:
         """
         Initializes the instance - basically setting the formatter to None
         and the filter list to empty.
@@ -40,18 +37,11 @@ class Handler(Filterer):
         Filterer.__init__(self)
         self._level = check_level(level)
         self.formatter: Formatter = _default_formatter
-        self._loop: Optional[asyncio.AbstractEventLoop] = loop
 
     @property
     @abc.abstractmethod
     def initialized(self):
         raise NotImplementedError()
-
-    @property
-    def loop(self):
-        if self._loop is None:
-            self._loop = asyncio.get_event_loop()
-        return self._loop
 
     @property
     def level(self):

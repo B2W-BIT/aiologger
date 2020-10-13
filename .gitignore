@@ -170,3 +170,6 @@ fabric.properties
 
 # vim swap files
 .*.sw?
+
+# vscode specific
+settings.json

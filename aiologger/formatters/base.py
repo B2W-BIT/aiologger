@@ -3,10 +3,10 @@ import io
 import time
 import traceback
 from string import Template
-from typing import Union, List
+from typing import Union, List, Optional
 from types import TracebackType
 
-from aiologger.records import LogRecord, ExceptionInfo
+from aiologger.records import LogRecord, ExtendedLogRecord, ExceptionInfo
 
 
 class FormatStyles(str, enum.Enum):

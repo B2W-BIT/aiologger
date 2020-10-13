@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import inspect
 import unittest
 import os
@@ -7,6 +8,7 @@ from typing import Tuple
 import asynctest
 from asynctest import CoroutineMock, Mock, patch, call, ANY
 
+from aiologger.utils import get_running_loop
 from aiologger.filters import StdoutFilter
 from aiologger.handlers.streams import AsyncStreamHandler
 from aiologger.levels import LogLevel
@@ -18,13 +20,35 @@ from tests.utils import make_read_pipe_stream_reader
 class LoggerOutsideEventLoopTest(unittest.TestCase):
     def test_property_loop_always_return_a_running_loop(self):
         logger = Logger(name="mylogger")
-        self.assertIsNotNone(logger.loop)
-        self.assertFalse(logger.loop.is_closed())
-        logger.loop.close()
 
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        self.assertIsNotNone(logger.loop)
-        self.assertFalse(logger.loop.is_closed())
+        # it's not safe to install the loop implictly, callers should use
+        # asynio.run
+        with self.assertRaises(RuntimeError):
+            logger.loop
+
+        # it's not safe to run the loop implictly, callers should use
+        # asynio.run
+        with contextlib.closing(asyncio.get_event_loop()) as loop:
+            with self.assertRaises(RuntimeError):
+                logger.loop
+
+            results = []
+
+            async def get_logger_loop():
+                results.append(logger.loop)
+
+            loop.run_until_complete(get_logger_loop())
+            logger_loop, = results
+
+            # now that the loop was explicitly set and started, we can use it
+            self.assertIs(logger_loop, loop)
+            del logger_loop
+            self.assertFalse(loop.is_closed())
+
+            # now that the loop was explicitly stopped, it's useless to return
+            loop = asyncio.get_event_loop()
+            with self.assertRaises(RuntimeError):
+                logger.loop
 
 
 class LoggerTests(asynctest.TestCase):
@@ -379,10 +403,10 @@ class LoggerTests(asynctest.TestCase):
         self
     ):
         logger = Logger.with_default_handlers()
-        self.assertIsNone(logger._loop)
+        self.assertIs(logger._loop, get_running_loop())
 
         await logger.info("Xablau")
-        self.assertIsInstance(logger._loop, asyncio.AbstractEventLoop)
+        self.assertIs(logger._loop, get_running_loop())
 
     def test_find_caller_without_stack_info(self):
         logger = Logger()
