@@ -110,7 +110,7 @@ class JsonFormatter(Formatter):
             return result.decode()
         else:
             resType = type(result)
-            raise Exception(
+            raise TypeError(
                 f"ERROR: serialized object must be of str or bytes type, given {result} with type {resType}"
             )
 

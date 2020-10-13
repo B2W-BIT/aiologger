@@ -1,7 +1,6 @@
 import json
 import orjson
 import unittest
-import inspect
 from datetime import timezone, timedelta
 from unittest.mock import patch, ANY
 
